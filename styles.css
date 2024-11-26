@@ -67,3 +67,10 @@ body {
     background-color: #f1f1f1;
     cursor: pointer;
 }
+.value-wrapper {
+    grid-template-columns: 1fr 1fr;
+    display: grid;
+  }
+  
+  
+  
