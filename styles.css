@@ -68,7 +68,9 @@ body {
   padding-right: 3%;
 }
 .restaurant-table td:nth-child(2n) {
-  width: 15%;
+  width: 10%;
+  min-width: 90px;
+  max-width: 120px;
 }
 
 
