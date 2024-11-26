@@ -94,7 +94,7 @@ td:has(.red) {
   background-color: #d7dcd7;
   cursor: pointer;
 }
-@media (min-width: 425px) {
+@media (max-width: 425px) {
     .value-wrapper {
         grid-template-columns: 1fr;
         grid-template-rows: 1fr 1fr;

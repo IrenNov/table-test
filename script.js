@@ -29,10 +29,9 @@ fetch("data.json")
       });
     }
 
-    // Функция для вычисления процентного изменения
     function calculatePercentageChange(currentValue, previousValue) {
-      if (previousValue === 0) return currentValue > 0 ? 100 : -100; // Если предыдущее значение 0, мы считаем 100% или -100%
-      if (previousValue === undefined || currentValue === undefined) return 0; // Если одно из значений отсутствует, возвращаем 0%
+      if (previousValue === 0) return currentValue > 0 ? 100 : -100;
+      if (previousValue === undefined || currentValue === undefined) return 0;
 
       const percentageChange =
         ((currentValue - previousValue) / previousValue) * 100;
@@ -67,44 +66,39 @@ fetch("data.json")
         wrapper.appendChild(valueText);
         wrapper.appendChild(percentageText);
 
-        // Добавляем контейнер в ячейку
         valueCell.appendChild(wrapper);
       } else {
-        valueCell.textContent = (value ?? "-").toLocaleString("ru-RU"); // Без процентов для других значений
+        valueCell.textContent = (value ?? "-").toLocaleString("ru-RU");
       }
       return valueCell;
     }
-    // Функция для создания строки таблицы
+
     function createRow(item, isClickable = false) {
       const row = document.createElement("tr");
 
-      // Добавляем категорию
       const categoryCell = document.createElement("td");
       categoryCell.textContent = item.category;
       row.appendChild(categoryCell);
 
-      // Получаем значения
       const values = item.values;
       const lastIndex = values.length - 1;
-      const currentValue = values[lastIndex]; // Текущий день
-      const yesterdayValue = values[lastIndex - 1]; // Вчера
-      const lastWeekValue = values[lastIndex - 7]; // Такой же день на прошлой неделе
+      const currentValue = values[lastIndex];
+      const yesterdayValue = values[lastIndex - 1];
+      const lastWeekValue = values[lastIndex - 7];
 
       [currentValue, yesterdayValue, lastWeekValue].forEach((value, index) => {
         let previousValue = currentValue;
         let isYesterday = false;
 
-        // Если это значение для вчерашнего дня, вычисляем процентное изменение
         if (index === 1) {
-          previousValue = currentValue; // Для yesterdayValue сравниваем с текущим
-          isYesterday = true; // Указываем, что это значение для вчерашнего дня
+          previousValue = currentValue;
+          isYesterday = true;
         }
 
         const valueCell = createValueCell(value, previousValue, isYesterday);
         row.appendChild(valueCell);
       });
 
-      // Если строка кликабельна, добавляем обработчик
       if (isClickable) {
         row.addEventListener("click", () => {
           drawChart(item.category, values.slice(-7));
@@ -114,50 +108,48 @@ fetch("data.json")
       return row;
     }
 
-    // Функция для построения графика
     function drawChart(category, recentValues) {
       Highcharts.chart("chart-container", {
         chart: { type: "line" },
         title: { text: `${category}` },
         xAxis: {
-          gridLineColor: "transperent", // Цвет линий сетки
-          lineColor: "#333333", // Цвет оси Y
-          //tickInterval: Math.ceil(Math.max(...recentValues) / 7), // Интервал отметок
+          gridLineColor: "transperent",
+          lineColor: "#333333",
+
           tickWidth: 5,
           tickLength: 5,
           tickColor: "#333333",
           labels: {
-            enabled: false, // Убираем подписи оси Y
+            enabled: false,
           },
         },
         yAxis: {
-          //visible: true, // Включаем ось Y
           lineWidth: 1,
-          gridLineColor: "transperent", // Цвет линий сетки
-          lineColor: "#333333", // Цвет оси Y
-          //tickInterval: Math.ceil(Math.max(...recentValues) / 7), // Интервал отметок
+          gridLineColor: "transperent",
+          lineColor: "#333333",
+
           tickWidth: 5,
           tickLength: 5,
           tickColor: "#333333",
           labels: {
-            enabled: false, // Убираем подписи оси Y
+            enabled: false,
           },
           title: {
-            text: null, // Убираем текст "Values"
+            text: null,
           },
         },
         legend: {
-          enabled: false, // Убираем легенду
+          enabled: false,
         },
         tooltip: {
-          useHTML: true, // Используем HTML для гибкости
+          useHTML: true,
           formatter: function () {
-            return `<strong>${category}</strong>: ${this.y}`; // Текст тултипа
+            return `<strong>${category}</strong>: ${this.y}`;
           },
-          backgroundColor: "#333", // Цвет фона
-          borderColor: "#000", // Цвет рамки
+          backgroundColor: "#333",
+          borderColor: "#000",
           style: {
-            color: "#fff", // Цвет текста
+            color: "#fff",
             fontSize: "12px",
           },
         },
@@ -165,19 +157,19 @@ fetch("data.json")
           {
             name: category,
             data: recentValues,
-            lineWidth: 2, // Толщина линии
+            lineWidth: 2,
             lineColor: "#217C52",
             marker: {
-              symbol: "round", // Форма маркеров: квадрат
-              radius: 4, // Размер квадрата
-              fillColor: "#217C52", // Цвет квадрата
+              symbol: "round",
+              radius: 4,
+              fillColor: "#217C52",
               lineWidth: 1,
-              lineColor: "#217C52", // Цвет границы квадрата
+              lineColor: "#217C52",
             },
           },
         ],
         credits: {
-          enabled: false, // Убираем подпись Highcharts
+          enabled: false,
         },
       });
     }
@@ -207,52 +199,44 @@ fetch("data.json")
     sumLabelCell.textContent = "Выручка, руб.";
     totalRow.appendChild(sumLabelCell);
 
-    const indices = [
-      dailySums.length - 1, // Последний элемент
-      dailySums.length - 2, // Предпоследний элемент
-    ];
+    const indices = [dailySums.length - 1, dailySums.length - 2];
 
-    // Создаем ячейки с суммами на основе указанных индексов
     indices.forEach((index) => {
       const totalCell = document.createElement("td");
-      // Проверяем, существует ли элемент по индексу, чтобы избежать ошибок
+
       totalCell.textContent = (dailySums[index] ?? 0).toLocaleString("ru-RU");
       totalRow.appendChild(totalCell);
     });
 
-    // Считаем сумму последних семи элементов массива dailySums
     const lastSevenSum = dailySums
-      .slice(-7) // Берем последние 7 элементов
-      .reduce((sum, value) => sum + (value ?? 0), 0); // Суммируем их
+      .slice(-7)
+      .reduce((sum, value) => sum + (value ?? 0), 0);
 
-    // Создаем третью ячейку для суммы последних семи элементов
     const totalCell = document.createElement("td");
     totalCell.textContent = lastSevenSum.toLocaleString("ru-RU");
     totalRow.appendChild(totalCell);
 
-    // Добавляем итоговый ряд в таблицу
     tableBody.appendChild(totalRow);
 
     tableBody.appendChild(totalRow);
-    // Добавляем строку для графика
+
     const chartRow = document.createElement("tr");
     const chartCell = document.createElement("td");
-    chartCell.colSpan = 4; // Объединяем все колонки
+    chartCell.colSpan = 4;
     chartCell.innerHTML = `<div id="chart-container" style="width: 100%; height: 300px;"></div>`;
     chartRow.appendChild(chartCell);
     tableBody.appendChild(chartRow);
 
     drawChart("Выручка, руб", dailySums.slice(-7));
-    // Добавляем первые три строки под строкой с суммами
+
     firstThreeItems.forEach((item) => {
-      const row = createRow(item, true); // Кликабельная строка
+      const row = createRow(item, true);
       tableBody.appendChild(row);
     });
 
-    // Добавляем остальные элементы
     const remainingItems = data.slice(3);
     remainingItems.forEach((item) => {
-      const row = createRow(item, true); // Кликабельная строка
+      const row = createRow(item, true);
       tableBody.appendChild(row);
     });
   })
