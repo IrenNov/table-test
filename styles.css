@@ -64,7 +64,7 @@ body {
   background-color: #edf7e8;
 }
 .restaurant-table td:nth-child(3) {
-  width: 20%;
+  width: 25%;
   padding-right: 3%;
 }
 .restaurant-table td:nth-child(2n) {
@@ -93,4 +93,11 @@ td:has(.red) {
 .restaurant-table tr:not(:nth-child(-n+2)):hover> td {
   background-color: #d7dcd7;
   cursor: pointer;
+}
+@media (min-width: 425px) {
+    .value-wrapper {
+        grid-template-columns: 1fr;
+        grid-template-rows: 1fr 1fr;
+        display: grid;
+      } 
 }
