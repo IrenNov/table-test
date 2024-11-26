@@ -54,6 +54,13 @@ fetch("data.json")
 
         valueText.classList.add("value-text");
         percentageText.classList.add("percentage-text");
+        if (percentageChange < 0) {
+          percentageText.classList.add("red");
+        } else if (percentageChange > 0) {
+          percentageText.classList.add("green");
+        } else {
+          percentageText.classList.add("zero");
+        }
 
         const wrapper = document.createElement("div");
         wrapper.classList.add("value-wrapper");
