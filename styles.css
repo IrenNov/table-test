@@ -101,5 +101,7 @@ td:has(.red) {
         grid-template-columns: 1fr;
         grid-template-rows: 1fr 1fr;
         display: grid;
+        gap: 10px;
+        padding-inline: 10px;
       } 
 }
