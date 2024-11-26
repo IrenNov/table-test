@@ -24,6 +24,7 @@ body {
   width: 100%;
   border-collapse: separate;
   border-spacing: 3px;
+  padding-inline: 15px;
   margin-bottom: 20px;
 }
 
@@ -58,8 +59,8 @@ body {
 .restaurant-table tr:nth-child(n + 3):nth-child(-n + 5) > td:nth-child(1) {
   padding-left: 25px;
 }
-.restaurant-table tr:nth-child(n + 6):nth-child(-n + 9) > td:nth-child(4),
-.restaurant-table tr:last-child > td:last-child {
+ tr:nth-child(n + 6):nth-child(-n + 9) > td:last-child,
+ tr:last-child > td:last-child {
   background-color: #edf7e8;
 }
 .restaurant-table td:nth-child(3) {
@@ -70,10 +71,7 @@ body {
   width: 15%;
 }
 
-.restaurant-table tbody tr:hover {
-  background-color: #f1f1f1;
-  cursor: pointer;
-}
+
 .value-wrapper {
   grid-template-columns: 1fr 1fr;
   display: grid;
@@ -86,9 +84,13 @@ body {
   color: #4cb700;
 }
 
-.restaurant-table td:has(.green) {
+ td:has(.green) {
   background-color: #edf7e8;
 }
-.restaurant-table td:has(.red) {
+td:has(.red) {
   background-color: #fde6e6;
+}
+.restaurant-table tr:not(:nth-child(-n+2)):hover> td {
+  background-color: #d7dcd7;
+  cursor: pointer;
 }
