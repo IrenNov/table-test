@@ -3,42 +3,125 @@ fetch("data.json")
   .then((data) => {
     const tableBody = document.querySelector("#data-table tbody");
 
-    let totalCurrent = 0;
-    let totalYesterday = 0;
-    let totalLastWeek = 0;
+    const remainingItems = data;
 
-    const firstThreeItems = data.slice(0, 3);
+    const cashValues = data.find((item) => item.category === "Наличные").values;
+    const creditValues = data.find(
+      (item) => item.category === "Кредитные карты"
+    ).values;
+    const nonCashValues = data.find(
+      (item) => item.category === "Безналичный расчет"
+    ).values;
+    const deliteValues = data.find(
+      (item) => item.category === "Удаление из чека (после оплаты), руб"
+    ).values;
 
-    function calculateDailySums(
-      cashArray,
-      creditArray,
-      nonCashArray,
-      deliteArray
-    ) {
-      const maxLength = Math.max(
-        cashArray.length,
-        creditArray.length,
-        nonCashArray.length
-      );
-      return Array.from({ length: maxLength }, (_, i) => {
-        const cashValue = cashArray[i] ?? 0;
-        const creditValue = creditArray[i] ?? 0;
-        const nonCashValue = nonCashArray[i] ?? 0;
-        const deliteValue = deliteArray[i] ?? 0;
-        return cashValue + creditValue + nonCashValue - deliteValue;
+    const dailySums = calculateDailySums(
+      cashValues,
+      creditValues,
+      nonCashValues,
+      deliteValues
+    );
+
+    const totalRowObj = {
+      category: "Выручка, руб",
+      values: dailySums,
+    };
+    const totalRow = createRow(totalRowObj, true);
+    tableBody.appendChild(totalRow);
+
+    const chartRow = document.createElement("tr");
+    chartRow.classList.add("chart-row");
+
+    const chartCell = document.createElement("td");
+    chartCell.colSpan = 4;
+    chartCell.innerHTML = `<div id="chart-container" style="width: 100%; height: 300px;"></div>`;
+
+    chartRow.appendChild(chartCell);
+
+    totalRow.after(chartRow);
+
+    drawChart(totalRowObj.category, totalRowObj.values.slice(-7));
+
+    remainingItems.forEach((item) => {
+      const row = createRow(item, true);
+
+      tableBody.appendChild(row);
+    });
+
+    function createRow(item, isClickable = false) {
+      const row = document.createElement("tr");
+
+      const categoryCell = document.createElement("td");
+      categoryCell.textContent = item.category;
+
+      row.appendChild(categoryCell);
+      let isTotalRow = false;
+      if (item.category === "Выручка, руб") {
+        isTotalRow = true;
+      }
+
+      const values = item.values;
+
+      const lastIndex = values.length - 1;
+
+      const currentValue = values[lastIndex];
+      const yesterdayValue = values[lastIndex - 1];
+      const lastWeekValue = values[lastIndex - 7];
+
+      [currentValue, yesterdayValue, lastWeekValue].forEach((value, index) => {
+        let previousValue = currentValue;
+        let isYesterday = false;
+        if (index === 1) {
+          isYesterday = true;
+        }
+        let isLastTdTotalRow = false;
+        if (isTotalRow && index === 2) {
+          isLastTdTotalRow = true;
+        }
+        const valueCell = createValueCell(
+          value,
+          previousValue,
+          isYesterday,
+          isLastTdTotalRow
+        );
+
+        row.appendChild(valueCell);
       });
+
+      if (isClickable) {
+        row.addEventListener("click", () => {
+          const existingChartRow = document.querySelector(".chart-row");
+          if (existingChartRow) {
+            existingChartRow.remove();
+          }
+
+          const chartRow = document.createElement("tr");
+          chartRow.classList.add("chart-row");
+
+          const chartCell = document.createElement("td");
+          chartCell.colSpan = 4;
+          chartCell.innerHTML = `<div id="chart-container" style="width: 100%; height: 300px;"></div>`;
+
+          chartRow.appendChild(chartCell);
+
+          row.after(chartRow);
+
+          drawChart(item.category, values.slice(-7));
+        });
+      }
+
+      return row;
     }
 
-    function calculatePercentageChange(currentValue, previousValue) {
-      if (previousValue === 0) return currentValue > 0 ? 100 : -100;
-      if (previousValue === undefined || currentValue === undefined) return 0;
-
-      const percentageChange =
-        ((currentValue - previousValue) / previousValue) * 100;
-      return percentageChange;
-    }
-    function createValueCell(value, previousValue, isYesterday = false) {
+    function createValueCell(
+      value,
+      previousValue,
+      isYesterday = false,
+      isLastTdTotalRow = false
+    ) {
       const valueCell = document.createElement("td");
+
       if (isYesterday) {
         const percentageChange = calculatePercentageChange(
           value,
@@ -49,7 +132,7 @@ fetch("data.json")
         valueText.textContent = (value ?? "-").toLocaleString("ru-RU");
 
         const percentageText = document.createElement("span");
-        percentageText.textContent = ` ${Math.floor(percentageChange)}%`;
+        percentageText.textContent = `${Math.floor(percentageChange)}%`;
 
         valueText.classList.add("value-text");
         percentageText.classList.add("percentage-text");
@@ -67,45 +150,46 @@ fetch("data.json")
         wrapper.appendChild(percentageText);
 
         valueCell.appendChild(wrapper);
+      } else if (isLastTdTotalRow) {
+        const lastSevenSum = totalRowObj["values"]
+          .slice(-7)
+          .reduce((sum, value) => sum + (value ?? 0), 0);
+        valueCell.textContent = (lastSevenSum ?? "-").toLocaleString("ru-RU");
       } else {
         valueCell.textContent = (value ?? "-").toLocaleString("ru-RU");
       }
+
       return valueCell;
     }
 
-    function createRow(item, isClickable = false) {
-      const row = document.createElement("tr");
+    function calculatePercentageChange(currentValue, previousValue) {
+      if (previousValue === 0) return currentValue > 0 ? 100 : -100;
+      if (previousValue === undefined || currentValue === undefined) return 0;
 
-      const categoryCell = document.createElement("td");
-      categoryCell.textContent = item.category;
-      row.appendChild(categoryCell);
+      const percentageChange =
+        ((currentValue - previousValue) / previousValue) * 100;
+      return percentageChange;
+    }
 
-      const values = item.values;
-      const lastIndex = values.length - 1;
-      const currentValue = values[lastIndex];
-      const yesterdayValue = values[lastIndex - 1];
-      const lastWeekValue = values[lastIndex - 7];
+    function calculateDailySums(
+      cashArray,
+      creditArray,
+      nonCashArray,
+      deliteArray
+    ) {
+      const maxLength = Math.max(
+        cashArray.length,
+        creditArray.length,
+        nonCashArray.length
+      );
 
-      [currentValue, yesterdayValue, lastWeekValue].forEach((value, index) => {
-        let previousValue = currentValue;
-        let isYesterday = false;
-
-        if (index === 1) {
-          previousValue = currentValue;
-          isYesterday = true;
-        }
-
-        const valueCell = createValueCell(value, previousValue, isYesterday);
-        row.appendChild(valueCell);
+      return Array.from({ length: maxLength }, (_, i) => {
+        const cashValue = cashArray[i] ?? 0;
+        const creditValue = creditArray[i] ?? 0;
+        const nonCashValue = nonCashArray[i] ?? 0;
+        const deliteValue = deliteArray[i] ?? 0;
+        return cashValue + creditValue + nonCashValue - deliteValue;
       });
-
-      if (isClickable) {
-        row.addEventListener("click", () => {
-          drawChart(item.category, values.slice(-7));
-        });
-      }
-
-      return row;
     }
 
     function drawChart(category, recentValues) {
@@ -173,71 +257,5 @@ fetch("data.json")
         },
       });
     }
-
-    const cashValues = data.find((item) => item.category === "Наличные").values;
-    const creditValues = data.find(
-      (item) => item.category === "Кредитные карты"
-    ).values;
-    const nonCashValues = data.find(
-      (item) => item.category === "Безналичный расчет"
-    ).values;
-    const deliteValues = data.find(
-      (item) => item.category === "Удаление из чека (после оплаты), руб"
-    ).values;
-
-    const dailySums = calculateDailySums(
-      cashValues,
-      creditValues,
-      nonCashValues,
-      deliteValues
-    );
-
-    const totalRow = document.createElement("tr");
-    totalRow.classList.add("total-row");
-
-    const sumLabelCell = document.createElement("td");
-    sumLabelCell.textContent = "Выручка, руб.";
-    totalRow.appendChild(sumLabelCell);
-
-    const indices = [dailySums.length - 1, dailySums.length - 2];
-
-    indices.forEach((index) => {
-      const totalCell = document.createElement("td");
-
-      totalCell.textContent = (dailySums[index] ?? 0).toLocaleString("ru-RU");
-      totalRow.appendChild(totalCell);
-    });
-
-    const lastSevenSum = dailySums
-      .slice(-7)
-      .reduce((sum, value) => sum + (value ?? 0), 0);
-
-    const totalCell = document.createElement("td");
-    totalCell.textContent = lastSevenSum.toLocaleString("ru-RU");
-    totalRow.appendChild(totalCell);
-
-    tableBody.appendChild(totalRow);
-
-    tableBody.appendChild(totalRow);
-
-    const chartRow = document.createElement("tr");
-    const chartCell = document.createElement("td");
-    chartCell.colSpan = 4;
-    chartCell.innerHTML = `<div id="chart-container" style="width: 100%; height: 300px;"></div>`;
-    chartRow.appendChild(chartCell);
-    tableBody.appendChild(chartRow);
-
-    drawChart("Выручка, руб", dailySums.slice(-7));
-
-    firstThreeItems.forEach((item) => {
-      const row = createRow(item, true);
-      tableBody.appendChild(row);
-    });
-
-    const remainingItems = data.slice(3);
-    remainingItems.forEach((item) => {
-      const row = createRow(item, true);
-      tableBody.appendChild(row);
-    });
   })
   .catch((error) => console.error("Ошибка загрузки данных:", error));
